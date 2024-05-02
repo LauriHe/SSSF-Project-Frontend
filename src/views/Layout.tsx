@@ -1,8 +1,17 @@
 import {Outlet, useNavigate} from "react-router-dom";
 import SvgIcons from "../components/SvgIcons";
+import {useEffect} from "react";
 
 function Layout() {
 	const navigate = useNavigate();
+
+	useEffect(() => {
+		const token = sessionStorage.getItem("token");
+		if (!token) {
+			navigate("/");
+		}
+	}, []);
+
 	return (
 		<>
 			<nav>
@@ -28,17 +37,6 @@ function Layout() {
 					</svg>
 					<label htmlFor="boards-link">Boards</label>
 				</button>
-				{/*<button
-					onClick={() => navigate("/calendar")}
-					aria-label="calendar page link"
-					id="calendar-link"
-					className="nav-button"
-				>
-					<svg>
-						<use xlinkHref="#calendar-svg" />
-					</svg>
-					<label htmlFor="calendar-link">Calendar</label>
-        </button>*/}
 				<button
 					onClick={() => navigate("/settings")}
 					aria-label="settings page link"

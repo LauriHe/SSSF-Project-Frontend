@@ -1,11 +1,49 @@
-import {useState} from "react";
+import {FormEvent, useState} from "react";
 import {useNavigate} from "react-router-dom";
+import {LoginInput, LoginResponse} from "../types/APITypes";
+import {doGraphQLFetch} from "../utils/fetch";
+import {loginUser} from "../utils/queries";
 
 function Login() {
-	const [focusEmail, setFocusEmail] = useState(false);
+	const [focusUserName, setFocusUserName] = useState(false);
 	const [focusPassword, setFocusPassword] = useState(false);
 
 	const navigate = useNavigate();
+	const initValues: LoginInput = {
+		user_name: "",
+		password: "",
+	};
+	const [inputs, setInputs] = useState(initValues);
+
+	const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		event.persist && event.persist();
+		setInputs((inputs) => {
+			return {
+				...inputs,
+				[event.target.name]: event.target.value,
+			};
+		});
+	};
+
+	const handleSubmit = async (event: FormEvent<HTMLButtonElement>) => {
+		event.preventDefault();
+		const response: LoginResponse = await doGraphQLFetch(loginUser, {
+			credentials: inputs,
+		});
+
+		if (response.login.token) {
+			sessionStorage.setItem("token", response.login.token);
+			navigate("/home");
+		} else {
+			alert(response.login.message);
+			setInputs(() => {
+				return {
+					user_name: "",
+					password: "",
+				};
+			});
+		}
+	};
 
 	return (
 		<div id="login-container">
@@ -14,14 +52,19 @@ function Login() {
 				<form id="login-form">
 					<div className="login-form-group">
 						<input
-							type="email"
-							id="login-email"
+							type="user_name"
+							id="login-user_name"
 							className="login-input"
-							name="email"
-							onFocus={() => setFocusEmail(true)}
-							onBlur={() => setFocusEmail(false)}
+							name="user_name"
+							onFocus={() => setFocusUserName(true)}
+							onBlur={() => {
+								if (inputs.user_name === "") setFocusUserName(false);
+							}}
+							onChange={handleInputChange}
 						/>
-						{!focusEmail && <span className="help-block">Email</span>}
+						{!focusUserName && (
+							<span className="help-block">User Name</span>
+						)}
 					</div>
 					<div className="login-form-group">
 						<input
@@ -30,7 +73,10 @@ function Login() {
 							className="login-input"
 							name="password"
 							onFocus={() => setFocusPassword(true)}
-							onBlur={() => setFocusPassword(false)}
+							onBlur={() => {
+								if (inputs.password === "") setFocusPassword(false);
+							}}
+							onChange={handleInputChange}
 						/>
 						{!focusPassword && (
 							<span className="help-block">Password</span>
@@ -44,11 +90,7 @@ function Login() {
 							{"Don't have an account? Register here."}
 						</p>
 					</div>
-					<button
-						id="login-button"
-						type="submit"
-						onClick={() => navigate("/home")}
-					>
+					<button id="login-button" type="submit" onClick={handleSubmit}>
 						Login
 					</button>
 				</form>
