@@ -1,6 +1,6 @@
 import {FormEvent, useState} from "react";
 import {useNavigate} from "react-router-dom";
-import {LoginInput, LoginResponse} from "../types/APITypes";
+import {ErrorMessage, LoginInput, LoginResponse} from "../types/APITypes";
 import {doGraphQLFetch} from "../utils/fetch";
 import {loginUser} from "../utils/queries";
 
@@ -27,15 +27,21 @@ function Login() {
 
 	const handleSubmit = async (event: FormEvent<HTMLButtonElement>) => {
 		event.preventDefault();
-		const response: LoginResponse = await doGraphQLFetch(loginUser, {
-			credentials: inputs,
-		});
+		const response: LoginResponse | ErrorMessage = await doGraphQLFetch(
+			loginUser,
+			{
+				credentials: inputs,
+			},
+		);
 
-		if (response.login.token) {
+		try {
+			if ("errors" in response) {
+				throw new Error(response.errors.message);
+			}
 			sessionStorage.setItem("token", response.login.token);
 			navigate("/home");
-		} else {
-			alert(response.login.message);
+		} catch (err) {
+			alert("Invalid credentials");
 			setInputs(() => {
 				return {
 					user_name: "",

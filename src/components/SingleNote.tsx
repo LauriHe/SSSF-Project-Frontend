@@ -1,11 +1,14 @@
 import {FormEvent, useEffect, useState} from "react";
 import {Note, NoteInput} from "../types/APITypes";
+import {createNote, updateNote} from "../utils/queries";
+import {doGraphQLFetch} from "../utils/fetch";
 
 type NoteRowProps = {
 	note: Note;
+	reloadNotes: () => void;
 };
 
-function SingleNote({note}: NoteRowProps) {
+function SingleNote({note, reloadNotes}: NoteRowProps) {
 	const initValues: NoteInput = {
 		title: note.title,
 		content: note.content,
@@ -13,13 +16,51 @@ function SingleNote({note}: NoteRowProps) {
 
 	const [inputs, setInputs] = useState(initValues);
 
-	const doUpload = (inputs: NoteInput) => {
-		console.log(inputs);
+	const doEditUpload = async (inputs: NoteInput) => {
+		try {
+			const token = sessionStorage.getItem("token");
+			if (!token) {
+				throw new Error("no token");
+			}
+			await doGraphQLFetch(updateNote, {id: note.id, ...inputs}, token);
+			reloadNotes();
+		} catch (error) {
+			if (error instanceof Error && error.message === "no token") {
+				alert("no token");
+			} else {
+				alert("could not edit note");
+			}
+		}
+	};
+
+	const doCreateUpload = async (inputs: NoteInput) => {
+		try {
+			const token = sessionStorage.getItem("token");
+			if (!token) {
+				throw new Error("no token");
+			}
+			await doGraphQLFetch(
+				createNote,
+				{title: inputs.title, content: inputs.content},
+				token,
+			);
+			reloadNotes();
+		} catch (error) {
+			if (error instanceof Error && error.message === "no token") {
+				alert("no token");
+			} else {
+				alert("could not create note");
+			}
+		}
 	};
 
 	const handleSubmit = (event: FormEvent<HTMLButtonElement>) => {
 		event.preventDefault();
-		doUpload(inputs);
+		if (note.id === "") {
+			doCreateUpload(inputs);
+		} else {
+			doEditUpload(inputs);
+		}
 	};
 
 	const handleInputChange = (
@@ -57,7 +98,7 @@ function SingleNote({note}: NoteRowProps) {
 					value={inputs.content}
 					onChange={handleInputChange}
 				></textarea>
-				<button type="submit" onSubmit={handleSubmit} id="note-save">
+				<button type="submit" onClick={handleSubmit} id="note-save">
 					Save
 				</button>
 			</form>

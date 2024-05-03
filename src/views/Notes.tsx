@@ -1,46 +1,107 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import NoteRow from "../components/NoteRow";
 import {Note} from "../types/APITypes";
 import SingleNote from "../components/SingleNote";
+import {doGraphQLFetch} from "../utils/fetch";
+import {
+	deleteNote,
+	getOwnedNotes,
+	getSharedNotes,
+	getSingleNote,
+} from "../utils/queries";
+import {useNavigate} from "react-router-dom";
+import ShareRow from "../components/ShareRow";
+import ShareForm from "../components/ShareForm";
 
 function Notes() {
 	const [currentNote, setCurrentNote] = useState<Note | null>(null);
 	const [show, setShow] = useState<"own" | "shared">("own");
+	const [ownNotes, setOwnNotes] = useState<Note[]>([]);
+	const [sharedNotes, setSharedNotes] = useState<Note[]>([]);
+	const [shareOpen, setShareOpen] = useState<boolean>(false);
+	const [token, setToken] = useState<string>("");
 
-	const ownNotes: Note[] = [
-		{
-			id: 1,
-			title: "A very important note",
-			content:
-				"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus lectus leo, pulvinar quis rutrum et, tincidunt nec mi. Sed tempus nisi sem, et faucibus dolor rhoncus at. Fusce tempus lectus non sem pretium lacinia. Curabitur sit amet mattis ex. Nunc lacinia semper ante eget ullamcorper. Aliquam et enim a sem suscipit posuere lacinia eget purus. Proin elementum eros sit amet tellus maximus gravida. Suspendisse potenti. Nulla pellentesque, nisl a vulputate commodo, tortor dolor commodo neque, nec maximus odio purus sed ex. Donec in luctus neque, at malesuada velit. Nunc ultricies, purus eu congue ullamcorper, dolor diam mattis neque, vel porta velit nibh sed nulla.",
-		},
-		{
-			id: 2,
-			title: "This is a note",
-			content:
-				"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus lectus leo, ia. Curabitur siAliquam et enim a sem suscipit posuere lacinia eget purus. Proin elementum eros sit amet tellus maximus gravida. Suspendisse potenti. Nulla pellentesque, nisl a vulputate commodo, tortor dolor commodo neque, nec maximus odio purus sed ex. Donec in luctus neque, at malesuada velit. Nunc ultricies, purus eu congue ullamcorper, dolor diam mattis neque, vel porta velit nibh sed nulla.",
-		},
-		{
-			id: 3,
-			title: "Another note",
-			content:
-				"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus lectus leo, pulvinar quis rutrum et, tincidunt nec mi. Sed tempus nisi sem, et faucibus dolor rhoncus at. Fusce tempus lectus non sem pretium lacinia. Curabitur sit amet mattis ex. Nunc lacinia semper ante eget ullamcorper. Aliquam et enim a sem suscipit posuere lacinia eget purus. Proin elementum eros sit amet tellus maximus gravida. Suspendisse potenti. Nulla pellentesque, nisl a vulputate commodo, tortor dolor commodo neque, nec maximus odio purus sed ex. Donec in luctus neque, at malesuada velit. Nunc ultricies, purus eu congue ullamcorper, dolor diam mattis neque, vel porta velit nibh sed nulla.",
-		},
-		{
-			id: 4,
-			title: "Some note",
-			content:
-				"Lorem ipsum dolor sit amet, consectempus nisi sem, et faucibus dolor rhoncus at. Fusce tempus lectus",
-		},
-	];
-	const sharedNotes: Note[] = [
-		{
-			id: 5,
-			title: "A shared note",
-			content:
-				"Sed tempus nisi sem, et faucibus dolor rhoncus at. Fusce tempus lectus non sem pretium lacinia. Curabitur sit amet mattis ex. Nunc lacinia semper ante eget ullamcorper. Aliquam et enim a sem suscipit posuere lacinia eget purus. Proin elementum eros sit amet tellus maximus gravida. Suspendisse potenti. Nulla pellentesque, nisl a vulputate commodo, tortor dolor commodo neque, nec maximus odio purus sed ex. Donec in luctus neque, at malesuada velit. Nunc ultricies, purus eu congue ullamcorper, dolor diam mattis neque, vel porta velit nibh sed nulla.",
-		},
-	];
+	const navigate = useNavigate();
+
+	const getOwnedNotesFromApi = async () => {
+		try {
+			const token = sessionStorage.getItem("token") || "";
+			const response = await doGraphQLFetch(getOwnedNotes, {}, token);
+			setOwnNotes(response.ownedNotes);
+		} catch (error) {
+			console.log("could not get own notes");
+		}
+	};
+
+	const getSharedNotesFromApi = async () => {
+		try {
+			const token = sessionStorage.getItem("token") || "";
+			const response = await doGraphQLFetch(getSharedNotes, {}, token);
+			setSharedNotes(response.sharedNotes);
+		} catch (error) {
+			alert("could not get shared notes");
+		}
+	};
+
+	const addNewNote = () => {
+		setCurrentNote({
+			id: "",
+			title: "New Note",
+			content: "",
+			owner: {
+				id: "",
+				user_name: "",
+				email: "",
+				filename: "",
+			},
+			collaborators: [],
+		});
+	};
+
+	const reloadNotes = () => {
+		getOwnedNotesFromApi();
+		getSharedNotesFromApi();
+	};
+
+	const deleteCurrentNote = async () => {
+		try {
+			if (confirm("Are you sure you want to delete this note?") === false)
+				return;
+			await doGraphQLFetch(deleteNote, {id: currentNote?.id}, token);
+			setCurrentNote(null);
+			reloadNotes();
+		} catch (error) {
+			alert("could not delete note");
+		}
+	};
+
+	const refreshCurrentNote = async () => {
+		try {
+			if (!currentNote) {
+				return;
+			}
+			const response = await doGraphQLFetch(
+				getSingleNote,
+				{noteId: currentNote.id},
+				token,
+			);
+			setCurrentNote(response.noteById);
+			reloadNotes();
+		} catch (error) {
+			console.log("could not refresh note");
+		}
+	};
+
+	useEffect(() => {
+		const sessionToken = sessionStorage.getItem("token");
+		if (sessionToken) {
+			setToken(sessionToken);
+		} else {
+			navigate("/");
+		}
+		getOwnedNotesFromApi();
+		getSharedNotesFromApi();
+	}, []);
 
 	return (
 		<div className="h-full pl-[4em] flex">
@@ -86,10 +147,72 @@ function Notes() {
 								key={note.id}
 							></NoteRow>
 						))}
+				{show === "own" && (
+					<button id="add-note" onClick={addNewNote}>
+						+ New Note
+					</button>
+				)}
 			</div>
 			<div id="note-container">
-				{currentNote && <SingleNote note={currentNote}></SingleNote>}
+				{currentNote && (
+					<>
+						<SingleNote
+							note={currentNote}
+							reloadNotes={reloadNotes}
+						></SingleNote>
+						{show === "own" && (
+							<div id="note-options">
+								<button
+									className="note-option-button hover:bg-blue-400"
+									onClick={() => {
+										setShareOpen(true);
+									}}
+								>
+									Share
+								</button>
+								<button
+									className="note-option-button hover:bg-red-600"
+									onClick={deleteCurrentNote}
+								>
+									Delete
+								</button>
+							</div>
+						)}
+					</>
+				)}
 			</div>
+			{shareOpen && (
+				<div id="share-modal-container">
+					<div id="share-modal">
+						<button
+							className="button w-[2.5em] hover:bg-red-500 place-self-end"
+							onClick={() => {
+								setShareOpen(false);
+							}}
+						>
+							X
+						</button>
+						<p>Currently shared to:</p>
+						{currentNote &&
+							currentNote.collaborators.map((collaborator) => (
+								<ShareRow
+									noteId={currentNote.id}
+									refresh={refreshCurrentNote}
+									collaborator={collaborator}
+									token={token}
+									key={collaborator.id}
+								></ShareRow>
+							))}
+						{currentNote && (
+							<ShareForm
+								currentNoteId={currentNote.id}
+								refresh={refreshCurrentNote}
+								token={token}
+							></ShareForm>
+						)}
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }

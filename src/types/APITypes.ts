@@ -1,3 +1,16 @@
+type User = {
+	id: string;
+	user_name: string;
+	email: string;
+	filename: string;
+};
+
+type ErrorMessage = {
+	errors: {
+		message: string;
+	};
+};
+
 type LoginInput = {
 	user_name: string;
 	password: string;
@@ -7,12 +20,7 @@ type LoginResponse = {
 	login: {
 		message: string;
 		token: string;
-		user: {
-			id: string;
-			user_name: string;
-			email: string;
-			filename: string;
-		};
+		user: User;
 	};
 };
 
@@ -26,24 +34,14 @@ type RegisterInput = {
 type RegisterResponse = {
 	register: {
 		message: string;
-		user: {
-			id: string;
-			user_name: string;
-			email: string;
-			filename: string;
-		};
+		user: User;
 	};
 };
 
 type ModifyUserResponse = {
 	updateUser: {
 		message: string;
-		user: {
-			id: string;
-			user_name: string;
-			email: string;
-			filename: string;
-		};
+		user: User;
 	};
 };
 
@@ -56,6 +54,8 @@ type Note = {
 	id: string;
 	title: string;
 	content: string;
+	owner: User;
+	collaborators: User[];
 };
 
 type NoteInput = {
@@ -74,6 +74,8 @@ type List = {
 };
 
 export type {
+	User,
+	ErrorMessage,
 	LoginInput,
 	LoginResponse,
 	RegisterInput,

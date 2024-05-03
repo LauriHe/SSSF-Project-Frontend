@@ -3,7 +3,7 @@
 }
 
 .note-row {
-	@apply w-full bg-gray-700 p-[0.5em] rounded-[0.4em];
+	@apply bg-gray-700 p-[0.5em] rounded-[0.4em];
 	width: calc(100% - 2rem);
 }
 
@@ -11,8 +11,21 @@
 	@apply bg-blue-400 cursor-pointer;
 }
 
+#add-note {
+	@apply bg-blue-400 text-white rounded-[0.4em] p-[0.5em] cursor-pointer;
+	width: calc(100% - 2rem);
+}
+
 #note-container {
 	@apply w-full flex justify-center;
+}
+
+#note-options {
+	@apply w-[5em] h-full flex flex-col gap-[1em] pt-[2em];
+}
+
+.note-option-button {
+	@apply bg-gray-700 text-white rounded-[0.4em] p-[0.5em] cursor-pointer text-[1em];
 }
 
 .single-note {
@@ -27,4 +40,21 @@
 	#note-save {
 		@apply bg-blue-400 text-white rounded-[0.4em] p-[0.5em] cursor-pointer;
 	}
+}
+
+#share-modal-container {
+	@apply absolute h-full flex justify-center items-center z-50 backdrop-brightness-[30%];
+	width: calc(100% - 4rem);
+}
+
+#share-modal {
+	@apply w-[30em] h-[60%] bg-gray-800 p-[1em] flex flex-col gap-[1em] rounded-[0.4em] overflow-y-scroll;
+}
+
+.share-modal-row {
+	@apply w-full h-[4em] p-[0.5em] rounded-[0.4em] bg-gray-700 flex flex-wrap items-center justify-between;
+}
+
+#share-modal-remove {
+	@apply w-[fit] bg-gray-800 hover:bg-red-500 text-white rounded-[0.4em] p-[0.5em] cursor-pointer;
 }

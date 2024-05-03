@@ -29,6 +29,14 @@ body,
 	display: flex;
 }
 
+.input {
+	@apply p-[0.5em] bg-gray-700 rounded-[0.4em];
+}
+
+.button {
+	@apply w-full bg-gray-700 hover:bg-blue-400 text-white rounded-[0.4em] p-[0.5em] cursor-pointer;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
