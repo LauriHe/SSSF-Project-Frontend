@@ -27,14 +27,13 @@ function Login() {
 
 	const handleSubmit = async (event: FormEvent<HTMLButtonElement>) => {
 		event.preventDefault();
-		const response: LoginResponse | ErrorMessage = await doGraphQLFetch(
-			loginUser,
-			{
-				credentials: inputs,
-			},
-		);
-
 		try {
+			const response: LoginResponse | ErrorMessage = await doGraphQLFetch(
+				loginUser,
+				{
+					credentials: inputs,
+				},
+			);
 			if ("errors" in response) {
 				throw new Error(response.errors.message);
 			}

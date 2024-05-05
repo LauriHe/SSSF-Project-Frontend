@@ -16,6 +16,10 @@ nav:hover {
 	}
 }
 
+.profile-pic {
+	@apply w-[2.3em] h-[2.3em] flex-shrink-0 bg-cover bg-center rounded-full;
+}
+
 .nav-button:hover {
 	@apply cursor-pointer;
 	svg {

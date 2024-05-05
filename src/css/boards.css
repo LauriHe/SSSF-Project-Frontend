@@ -7,7 +7,7 @@
 }
 
 .list {
-	@apply w-[15em] h-fit rounded-[0.4em] p-[0.5em] bg-gray-900 flex flex-col gap-[0.5em];
+	@apply w-[15em] h-fit rounded-[0.4em] p-[0.5em] bg-gray-900 flex flex-col gap-[0.5em] grow-0 shrink-0;
 }
 
 .list-title {

@@ -1,5 +1,5 @@
 import {useEffect, useRef, useState} from "react";
-import ListColumn from "../components/ListColumn";
+import ListColumn from "./ListColumn";
 import {useLocation, useNavigate} from "react-router-dom";
 import {Board, List, User} from "../types/APITypes";
 import {doGraphQLFetch} from "../utils/fetch";
@@ -12,8 +12,8 @@ import {
 	getListsByBoard,
 	updateBoard,
 } from "../utils/queries";
-import ShareRow from "../components/ShareRow";
-import ShareForm from "../components/ShareForm";
+import ShareRow from "./ShareRow";
+import ShareForm from "./ShareForm";
 
 function SingleBoard() {
 	const [user, setUser] = useState<User | null>(null);

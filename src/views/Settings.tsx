@@ -5,7 +5,7 @@ import {
 	UploadResponse,
 } from "../types/APITypes";
 import {doGraphQLFetch, doUploadFetch} from "../utils/fetch";
-import {checkToken, putUser} from "../utils/queries";
+import {checkToken, deleteUser, putUser} from "../utils/queries";
 import {useNavigate} from "react-router-dom";
 
 function Settings() {
@@ -17,6 +17,8 @@ function Settings() {
 	};
 	const [inputs, setInputs] = useState(initValues);
 	const [image, setImage] = useState<File | null>(null);
+	const [token, setToken] = useState<string>("");
+	const [profilePic, setProfilePic] = useState<string>("");
 
 	const navigate = useNavigate();
 
@@ -53,40 +55,40 @@ function Settings() {
 	};
 
 	const doUpload = async () => {
-		const token = sessionStorage.getItem("token");
-		if (!token) {
-			alert("You must be logged in");
-			navigate("/");
-			return;
-		}
+		try {
+			const token = sessionStorage.getItem("token");
+			if (!token) {
+				alert("You must be logged in");
+				navigate("/");
+				return;
+			}
 
-		let imageFilename = "";
+			let imageFilename = "";
 
-		if (image) {
-			const imageResponse: UploadResponse = await doUploadFetch(
-				image,
+			if (image) {
+				const imageResponse: UploadResponse = await doUploadFetch(
+					image,
+					token,
+				);
+				console.log(imageResponse);
+				if (imageResponse.filename) {
+					imageFilename = imageResponse.filename;
+				}
+			}
+
+			const response: ModifyUserResponse = await doGraphQLFetch(
+				putUser,
+				{
+					user: {
+						email: inputs.email,
+						user_name: inputs.user_name,
+						password: inputs.password,
+						filename: imageFilename,
+					},
+				},
 				token,
 			);
-			console.log(imageResponse);
-			if (imageResponse.filename) {
-				imageFilename = imageResponse.filename;
-			}
-		}
 
-		const response: ModifyUserResponse = await doGraphQLFetch(
-			putUser,
-			{
-				user: {
-					email: inputs.email,
-					user_name: inputs.user_name,
-					password: inputs.password,
-					filename: imageFilename,
-				},
-			},
-			token,
-		);
-
-		if (response.updateUser.user) {
 			alert("User updated successfully");
 			setInputs(() => {
 				return {
@@ -96,7 +98,7 @@ function Settings() {
 					password_repeat: "",
 				};
 			});
-		} else {
+		} catch (error) {
 			alert("Error updating user");
 			setInputs(() => {
 				return {
@@ -115,84 +117,123 @@ function Settings() {
 	};
 
 	const setInitValues = async () => {
-		const token = sessionStorage.getItem("token");
-		const response = await doGraphQLFetch(checkToken, {token: token});
-		if (response.checkToken.user) {
+		try {
+			const token = sessionStorage.getItem("token");
+			const response = await doGraphQLFetch(checkToken, {token: token});
+
 			setInputs({
 				email: response.checkToken.user.email,
 				user_name: response.checkToken.user.user_name,
 				password: "",
 				password_repeat: "",
 			});
+
+			const fileUrl = import.meta.env.VITE_FILE_URL as string;
+			const pictureUrl = fileUrl + "/" + response.checkToken.user.filename;
+			setProfilePic(pictureUrl);
+		} catch (error) {
+			console.log("Cannot get user info");
+		}
+	};
+
+	const deleteAccount = async () => {
+		try {
+			if (!confirm("Are you sure you want to delete your account?")) return;
+			const response = await doGraphQLFetch(deleteUser, {}, token);
+			alert(response.deleteUser);
+			sessionStorage.removeItem("token");
+			navigate("/");
+		} catch (error) {
+			alert("Error deleting user");
 		}
 	};
 
 	useEffect(() => {
-		setInitValues();
+		const token = sessionStorage.getItem("token");
+		if (token) {
+			setToken(token);
+			setInitValues();
+		} else {
+			navigate("/");
+		}
 	}, []);
 
 	return (
-		<div id="settings-container">
-			<form id="settings-form">
-				<h1>Modify Personal Info</h1>
-				<div className="settings-form-group">
-					<label htmlFor="email">Email</label>
-					<input
-						type="email"
-						id="email"
-						name="email"
-						value={inputs.email}
-						onChange={handleInputChange}
-					/>
+		<div id="account-container">
+			<div id="profile-container">
+				<div>
+					<h2>{inputs.user_name}</h2>
+					<h3>{inputs.email}</h3>
 				</div>
-				<div className="settings-form-group">
-					<label htmlFor="username">Username</label>
-					<input
-						type="text"
-						id="username"
-						name="user_name"
-						value={inputs.user_name}
-						onChange={handleInputChange}
-					/>
-				</div>
-				<div className="settings-form-group">
-					<label htmlFor="password">Password</label>
-					<input
-						type="password"
-						id="password"
-						name="password"
-						value={inputs.password}
-						onChange={handleInputChange}
-					/>
-				</div>
-				<div className="settings-form-group">
-					<label htmlFor="repeat-password">Repeat Password</label>
-					<input
-						type="password"
-						id="repeat-password"
-						name="password_repeat"
-						value={inputs.password_repeat}
-						onChange={handleInputChange}
-					/>
-				</div>
-				<div className="settings-form-group">
-					<label htmlFor="profile-picture">Profile Picture</label>
-					<input
-						type="file"
-						accept="image/*"
-						id="profile-picture"
-						name="profile_picture"
-						onChange={handleFileChange}
-					/>
-				</div>
-				<button
-					id="save-settings-button"
-					type="submit"
-					onClick={handleSubmit}
-				>
-					Save Changes
+				<img src={profilePic} alt="Profile picture" />
+			</div>
+			<div id="settings-container">
+				<h1 className="text-3xl font-bold self-start">
+					Modify Personal Info
+				</h1>
+				<form id="settings-form">
+					<div className="settings-form-group">
+						<label htmlFor="email">Email</label>
+						<input
+							type="email"
+							id="email"
+							name="email"
+							value={inputs.email}
+							onChange={handleInputChange}
+						/>
+					</div>
+					<div className="settings-form-group">
+						<label htmlFor="username">Username</label>
+						<input
+							type="text"
+							id="username"
+							name="user_name"
+							value={inputs.user_name}
+							onChange={handleInputChange}
+						/>
+					</div>
+					<div className="settings-form-group">
+						<label htmlFor="password">Password</label>
+						<input
+							type="password"
+							id="password"
+							name="password"
+							value={inputs.password}
+							onChange={handleInputChange}
+						/>
+					</div>
+					<div className="settings-form-group">
+						<label htmlFor="repeat-password">Repeat Password</label>
+						<input
+							type="password"
+							id="repeat-password"
+							name="password_repeat"
+							value={inputs.password_repeat}
+							onChange={handleInputChange}
+						/>
+					</div>
+					<div className="settings-form-group">
+						<label htmlFor="profile-picture">Profile Picture</label>
+						<input
+							type="file"
+							accept="image/*"
+							id="profile-picture"
+							name="profile_picture"
+							onChange={handleFileChange}
+						/>
+					</div>
+					<button
+						id="save-settings-button"
+						type="submit"
+						onClick={handleSubmit}
+					>
+						Save Changes
+					</button>
+				</form>
+				<button id="delete-account-button" onClick={deleteAccount}>
+					Delete Account
 				</button>
-			</form>
+			</div>
 		</div>
 	);
 }

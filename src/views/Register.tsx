@@ -48,26 +48,30 @@ function Register() {
 		event.preventDefault();
 		if (!comparePasswords()) return;
 
-		const response: RegisterResponse = await doGraphQLFetch(postUser, {
-			user: {
-				email: inputs.email,
-				user_name: inputs.user_name,
-				password: inputs.password,
-			},
-		});
-
-		if (response.register.user) {
-			navigate("/");
-		} else {
-			alert(response.register.message);
-			setInputs(() => {
-				return {
-					email: "",
-					user_name: "",
-					password: "",
-					password_repeat: "",
-				};
+		try {
+			const response: RegisterResponse = await doGraphQLFetch(postUser, {
+				user: {
+					email: inputs.email,
+					user_name: inputs.user_name,
+					password: inputs.password,
+				},
 			});
+
+			if (response.register.user) {
+				navigate("/");
+			} else {
+				alert(response.register.message);
+				setInputs(() => {
+					return {
+						email: "",
+						user_name: "",
+						password: "",
+						password_repeat: "",
+					};
+				});
+			}
+		} catch (error) {
+			alert("Invalid credentials");
 		}
 	};
 

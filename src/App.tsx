@@ -6,7 +6,7 @@ import Notes from "./views/Notes";
 import Settings from "./views/Settings";
 import Register from "./views/Register";
 import Boards from "./views/Boards";
-import SingleBoard from "./views/SingleBoard";
+import SingleBoard from "./components/SingleBoard";
 
 function App() {
 	return (

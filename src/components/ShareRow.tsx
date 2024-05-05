@@ -1,3 +1,4 @@
+import {useEffect} from "react";
 import {User} from "../types/APITypes";
 import {doGraphQLFetch} from "../utils/fetch";
 import {unshareBoard, unshareNoteWithUser} from "../utils/queries";
@@ -46,11 +47,29 @@ function ShareRow({
 		}
 	};
 
+	useEffect(() => {
+		const fileUrl = import.meta.env.VITE_FILE_URL as string;
+		const pictureUrl = fileUrl + "/" + collaborator.filename;
+		if (collaborator.filename === "") return;
+		const pictureElement: HTMLElement | null = document.querySelector(
+			"#profile-picture-share",
+		);
+		if (pictureElement) {
+			pictureElement.style.backgroundImage = `url(${pictureUrl})`;
+		}
+	}, []);
+
 	return (
 		<div className="share-modal-row">
-			<div className="w-[1fr]">
-				<div className="w-fit">{collaborator.user_name}</div>
-				<div className="w-fit">{collaborator.email}</div>
+			<div className="flex items-center gap-[1em]">
+				<div
+					id="profile-picture-share"
+					className={"profile-pic bg-[url(./default-profile.jpg)]"}
+				></div>
+				<div>
+					<div className="w-fit">{collaborator.user_name}</div>
+					<div className="w-fit">{collaborator.email}</div>
+				</div>
 			</div>
 			<button id="share-modal-remove" onClick={removeCollaborator}>
 				Remove
