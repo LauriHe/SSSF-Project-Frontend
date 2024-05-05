@@ -96,11 +96,11 @@ function Notes() {
 		const sessionToken = sessionStorage.getItem("token");
 		if (sessionToken) {
 			setToken(sessionToken);
+			getOwnedNotesFromApi();
+			getSharedNotesFromApi();
 		} else {
 			navigate("/");
 		}
-		getOwnedNotesFromApi();
-		getSharedNotesFromApi();
 	}, []);
 
 	return (
@@ -196,7 +196,8 @@ function Notes() {
 						{currentNote &&
 							currentNote.collaborators.map((collaborator) => (
 								<ShareRow
-									noteId={currentNote.id}
+									documentType="note"
+									documentId={currentNote.id}
 									refresh={refreshCurrentNote}
 									collaborator={collaborator}
 									token={token}
@@ -205,7 +206,8 @@ function Notes() {
 							))}
 						{currentNote && (
 							<ShareForm
-								currentNoteId={currentNote.id}
+								documentType="note"
+								documentId={currentNote.id}
 								refresh={refreshCurrentNote}
 								token={token}
 							></ShareForm>

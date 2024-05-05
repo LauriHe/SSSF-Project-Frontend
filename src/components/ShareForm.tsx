@@ -1,14 +1,15 @@
 import {useState} from "react";
 import {doGraphQLFetch} from "../utils/fetch";
-import {getUserByName, shareNoteWithUser} from "../utils/queries";
+import {getUserByName, shareBoard, shareNoteWithUser} from "../utils/queries";
 
 type ShareFormProps = {
-	currentNoteId: string;
+	documentType: "note" | "board";
+	documentId: string;
 	refresh: () => void;
 	token: string;
 };
 
-function ShareForm({currentNoteId, refresh, token}: ShareFormProps) {
+function ShareForm({documentType, documentId, refresh, token}: ShareFormProps) {
 	const [input, setInput] = useState("");
 
 	const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,12 +23,22 @@ function ShareForm({currentNoteId, refresh, token}: ShareFormProps) {
 				{name: input},
 				token,
 			);
-			await doGraphQLFetch(
-				shareNoteWithUser,
-				{noteId: currentNoteId, userId: nameResponse.userByName.id},
-				token,
-			);
-			refresh();
+			if (documentType === "note") {
+				await doGraphQLFetch(
+					shareNoteWithUser,
+					{noteId: documentId, userId: nameResponse.userByName.id},
+					token,
+				);
+				refresh();
+			}
+			if (documentType === "board") {
+				await doGraphQLFetch(
+					shareBoard,
+					{boardId: documentId, userId: nameResponse.userByName.id},
+					token,
+				);
+				refresh();
+			}
 		} catch (error) {
 			alert("Could not find user");
 		}

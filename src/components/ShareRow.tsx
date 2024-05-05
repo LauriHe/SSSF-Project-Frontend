@@ -1,26 +1,46 @@
 import {User} from "../types/APITypes";
 import {doGraphQLFetch} from "../utils/fetch";
-import {unshareNoteWithUser} from "../utils/queries";
+import {unshareBoard, unshareNoteWithUser} from "../utils/queries";
 
 type ShareRowProps = {
-	noteId: string;
+	documentType: "note" | "board";
+	documentId: string;
 	collaborator: User;
 	refresh: () => void;
 	token: string;
 };
 
-function ShareRow({noteId, collaborator, refresh, token}: ShareRowProps) {
+function ShareRow({
+	documentType,
+	documentId,
+	collaborator,
+	refresh,
+	token,
+}: ShareRowProps) {
 	const removeCollaborator = async () => {
 		try {
-			await doGraphQLFetch(
-				unshareNoteWithUser,
-				{
-					noteId: noteId,
-					userId: collaborator.id,
-				},
-				token,
-			);
-			refresh();
+			if (documentType === "note") {
+				await doGraphQLFetch(
+					unshareNoteWithUser,
+					{
+						noteId: documentId,
+						userId: collaborator.id,
+					},
+					token,
+				);
+				refresh();
+			}
+			if (documentType === "board") {
+				await doGraphQLFetch(
+					unshareBoard,
+					{
+						boardId: documentId,
+						userId: collaborator.id,
+					},
+					token,
+				);
+				refresh();
+			}
 		} catch (error) {
 			alert("Could not remove collaborator");
 		}

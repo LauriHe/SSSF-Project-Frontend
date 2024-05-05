@@ -3,10 +3,10 @@ import Layout from "./views/Layout";
 import Home from "./views/Home";
 import Login from "./views/Login";
 import Notes from "./views/Notes";
-import Boards from "./views/Boards";
-import Calendar from "./views/Calendar";
 import Settings from "./views/Settings";
 import Register from "./views/Register";
+import Boards from "./views/Boards";
+import SingleBoard from "./views/SingleBoard";
 
 function App() {
 	return (
@@ -17,7 +17,7 @@ function App() {
 				<Route path="/home" element={<Home></Home>} />
 				<Route path="/notes" element={<Notes></Notes>} />
 				<Route path="/boards" element={<Boards></Boards>} />
-				<Route path="/calendar" element={<Calendar></Calendar>} />
+				<Route path="/board" element={<SingleBoard></SingleBoard>} />
 				<Route path="/settings" element={<Settings></Settings>} />
 			</Route>
 		</Routes>

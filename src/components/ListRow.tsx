@@ -1,26 +1,56 @@
 import {Card} from "../types/APITypes";
-import {useState} from "react";
+import {useRef, useState} from "react";
+import {doGraphQLFetch} from "../utils/fetch";
+import {updateCard} from "../utils/queries";
 
 type ListRowProps = {
 	card: Card;
-	cardIndex: number;
-	deleteCard: (index: number) => void;
+	token: string;
+	deleteCard: (index: string) => Promise<void>;
 };
 
-function ListRow({card, cardIndex, deleteCard}: ListRowProps) {
-	const [inputs, setInputs] = useState(card);
+function ListRow({card, token, deleteCard}: ListRowProps) {
+	const initValues = {
+		title: card.title,
+		content: card.content,
+	};
+	const [inputs, setInputs] = useState(initValues);
 	const [showCardOptions, setShowCardOptions] = useState(false);
+	const titleRef = useRef<HTMLInputElement>(null);
+	const contentRef = useRef<HTMLTextAreaElement>(null);
+
+	const handleTitleKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
+		if (event.key === "Enter") {
+			titleRef.current?.blur();
+		}
+	};
+
+	const handleContentKey = (
+		event: React.KeyboardEvent<HTMLTextAreaElement>,
+	) => {
+		if (event.key === "Enter") {
+			contentRef.current?.blur();
+		}
+	};
 
 	const toggleListOptions = () => {
 		setShowCardOptions(!showCardOptions);
 	};
 
-	const doUpload = (inputs: Card) => {
-		console.log(inputs);
-	};
-
-	const handleSubmit = () => {
-		doUpload(inputs);
+	const doUpload = async () => {
+		try {
+			const response = await doGraphQLFetch(
+				updateCard,
+				{id: card.id, title: inputs.title, content: inputs.content},
+				token,
+			);
+			setInputs({
+				title: response.updateCard.card.title,
+				content: response.updateCard.card.content,
+			});
+		} catch (error) {
+			alert("could not update card");
+		}
 	};
 
 	const handleInputChange = (
@@ -46,7 +76,9 @@ function ListRow({card, cardIndex, deleteCard}: ListRowProps) {
 					name="title"
 					value={inputs.title}
 					onChange={handleInputChange}
-					onBlur={handleSubmit}
+					onBlur={doUpload}
+					ref={titleRef}
+					onKeyDown={handleTitleKey}
 				></input>
 				<button
 					className="list-options-toggle bg-gray-800 hover:bg-gray-700"
@@ -59,7 +91,7 @@ function ListRow({card, cardIndex, deleteCard}: ListRowProps) {
 						<button
 							className="list-options-button hover:bg-red-500"
 							onClick={() => {
-								deleteCard(cardIndex);
+								deleteCard(card.id);
 							}}
 						>
 							Delete Card
@@ -69,11 +101,13 @@ function ListRow({card, cardIndex, deleteCard}: ListRowProps) {
 			</div>
 			<textarea
 				className="card-description"
-				name="description"
+				name="content"
 				rows={2}
-				value={inputs.description}
+				value={inputs.content}
 				onChange={handleInputChange}
-				onBlur={handleSubmit}
+				onBlur={doUpload}
+				ref={contentRef}
+				onKeyDown={handleContentKey}
 			></textarea>
 		</div>
 	);

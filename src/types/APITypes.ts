@@ -63,14 +63,24 @@ type NoteInput = {
 	content: string;
 };
 
-type Card = {
+type Board = {
+	id: string;
 	title: string;
-	description: string;
+	owner: User;
+	collaborators: User[];
+};
+
+type Card = {
+	id: string;
+	list: List;
+	title: string;
+	content: string;
 };
 
 type List = {
+	id: string;
+	board: Board;
 	title: string;
-	cards: Card[];
 };
 
 export type {
@@ -84,6 +94,7 @@ export type {
 	UploadResponse,
 	Note,
 	NoteInput,
+	Board,
 	Card,
 	List,
 };

@@ -1,23 +1,41 @@
-import {useState} from "react";
-import {List} from "../types/APITypes";
+import {useEffect, useRef, useState} from "react";
+import {Card, List} from "../types/APITypes";
 import ListRow from "./ListRow";
+import {doGraphQLFetch} from "../utils/fetch";
+import {
+	createCard,
+	deleteCard,
+	getCardsByList,
+	updateList,
+} from "../utils/queries";
 
 type ListProps = {
 	list: List;
-	listIndex: number;
-	deleteList: (index: number) => void;
+	token: string;
+	deleteList: (index: string) => Promise<void>;
 };
 
-function ListColumn({list, listIndex, deleteList}: ListProps) {
-	const [title, setTitle] = useState(list.title);
-	const [cards, setCards] = useState(list.cards);
-	const [showListOptions, setShowListOptions] = useState(false);
+function ListColumn({list, token, deleteList}: ListProps) {
+	const [title, setTitle] = useState<string>(list.title);
+	const [cards, setCards] = useState<Card[]>([]);
+	const [showListOptions, setShowListOptions] = useState<boolean>(false);
+	const inputRef = useRef<HTMLInputElement>(null);
+
 	const toggleListOptions = () => {
 		setShowListOptions(!showListOptions);
 	};
 
-	const uploadTitle = () => {
-		console.log(title);
+	const uploadTitle = async () => {
+		try {
+			const response = await doGraphQLFetch(
+				updateList,
+				{id: list.id, title: title},
+				token,
+			);
+			setTitle(response.updateList.list.title);
+		} catch (error) {
+			alert("could not update title");
+		}
 	};
 
 	const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,13 +43,53 @@ function ListColumn({list, listIndex, deleteList}: ListProps) {
 		setTitle(event.target.value);
 	};
 
-	const addCard = () => {
-		setCards([...cards, {title: "New Card", description: ""}]);
+	const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+		if (event.key === "Enter") {
+			inputRef.current?.blur();
+		}
 	};
 
-	const deleteCard = (index: number) => {
-		setCards(cards.filter((_, i) => i !== index));
+	const fetchCards = async () => {
+		try {
+			const response = await doGraphQLFetch(
+				getCardsByList,
+				{listId: list.id},
+				token,
+			);
+			setCards(response.cardsByList);
+		} catch (error) {
+			console.error("could not fetch cards");
+		}
 	};
+
+	const addCard = async () => {
+		try {
+			const response = await doGraphQLFetch(
+				createCard,
+				{listId: list.id, title: "New Card", content: ""},
+				token,
+			);
+			setCards([...cards, response.createCard.card]);
+		} catch (error) {
+			alert("could not add card");
+		}
+	};
+
+	const deleteSingleCard = async (id: string) => {
+		try {
+			const response = await doGraphQLFetch(deleteCard, {id}, token);
+			if (!response.deleteCard) {
+				throw new Error("could not delete card");
+			}
+			setCards(cards.filter((card) => card.id !== id));
+		} catch (error) {
+			alert("could not delete card");
+		}
+	};
+
+	useEffect(() => {
+		fetchCards();
+	}, []);
 
 	return (
 		<div className="list">
@@ -42,6 +100,8 @@ function ListColumn({list, listIndex, deleteList}: ListProps) {
 					onBlur={uploadTitle}
 					type="text"
 					value={title}
+					ref={inputRef}
+					onKeyDown={handleKeyDown}
 				/>
 				<button className="list-options-toggle" onClick={toggleListOptions}>
 					<span className="w-fit h-fit">...</span>
@@ -51,7 +111,7 @@ function ListColumn({list, listIndex, deleteList}: ListProps) {
 						<button
 							className="list-options-button hover:bg-red-500"
 							onClick={() => {
-								deleteList(listIndex);
+								deleteList(list.id);
 							}}
 						>
 							Delete List
@@ -63,8 +123,8 @@ function ListColumn({list, listIndex, deleteList}: ListProps) {
 				<ListRow
 					key={index}
 					card={card}
-					cardIndex={index}
-					deleteCard={deleteCard}
+					token={token}
+					deleteCard={deleteSingleCard}
 				></ListRow>
 			))}
 			<button className="add-card-button" onClick={addCard}>
