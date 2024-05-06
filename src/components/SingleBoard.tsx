@@ -36,6 +36,14 @@ function SingleBoard() {
 
 	const uploadTitle = async () => {
 		try {
+			if (titleInput === "") {
+				alert("Title cannot be empty");
+				return;
+			}
+			if (titleInput.length > 100) {
+				alert("Title cannot be longer than 100 characters");
+				return;
+			}
 			const response = await doGraphQLFetch(
 				updateBoard,
 				{boardId: board?.id, title: titleInput},

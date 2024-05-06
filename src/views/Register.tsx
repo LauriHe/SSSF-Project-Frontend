@@ -1,4 +1,4 @@
-import {FormEvent, useState} from "react";
+import {FormEvent, useRef, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {doGraphQLFetch} from "../utils/fetch";
 import {postUser} from "../utils/queries";
@@ -9,6 +9,7 @@ function Register() {
 	const [focusUsername, setFocusUsername] = useState(false);
 	const [focusPassword, setFocusPassword] = useState(false);
 	const [focusPasswordRepeat, setFocusPasswordRepeat] = useState(false);
+	const formRef = useRef<HTMLFormElement>(null);
 
 	const navigate = useNavigate();
 	const initValues: RegisterInput = {
@@ -46,6 +47,11 @@ function Register() {
 
 	const handleSubmit = async (event: FormEvent<HTMLButtonElement>) => {
 		event.preventDefault();
+		const valid = formRef.current?.checkValidity();
+		formRef.current?.reportValidity();
+
+		if (!valid) return;
+
 		if (!comparePasswords()) return;
 
 		try {
@@ -71,7 +77,7 @@ function Register() {
 				});
 			}
 		} catch (error) {
-			alert("Invalid credentials");
+			alert("Invalid inputs");
 		}
 	};
 
@@ -79,7 +85,7 @@ function Register() {
 		<div id="login-container">
 			<div id="login-box">
 				<h1 id="login-box-title">SSSF Project</h1>
-				<form id="login-form">
+				<form id="login-form" ref={formRef}>
 					<div className="login-form-group">
 						<input
 							type="email"
@@ -92,6 +98,7 @@ function Register() {
 								if (inputs.email === "") setFocusEmail(false);
 							}}
 							onChange={handleInputChange}
+							required
 						/>
 						{!focusEmail && <span className="help-block">Email</span>}
 					</div>
@@ -107,6 +114,9 @@ function Register() {
 								if (inputs.user_name === "") setFocusUsername(false);
 							}}
 							onChange={handleInputChange}
+							required
+							minLength={2}
+							maxLength={100}
 						/>
 						{!focusUsername && (
 							<span className="help-block">Username</span>
@@ -124,6 +134,9 @@ function Register() {
 								if (inputs.password === "") setFocusPassword(false);
 							}}
 							onChange={handleInputChange}
+							required
+							minLength={6}
+							maxLength={100}
 						/>
 						{!focusPassword && (
 							<span className="help-block">Password</span>
@@ -142,6 +155,9 @@ function Register() {
 									setFocusPasswordRepeat(false);
 							}}
 							onChange={handleInputChange}
+							required
+							minLength={6}
+							maxLength={100}
 						/>
 						{!focusPasswordRepeat && (
 							<span className="help-block">Repeat password</span>

@@ -39,6 +39,19 @@ function ListRow({card, token, deleteCard}: ListRowProps) {
 
 	const doUpload = async () => {
 		try {
+			if (inputs.title === "") {
+				alert("Title cannot be empty");
+				return;
+			}
+			if (inputs.title.length > 100) {
+				alert("Title cannot be longer than 100 characters");
+				return;
+			}
+			if (inputs.content.length > 5000) {
+				alert("Content cannot be longer than 5000 characters");
+				return;
+			}
+
 			const response = await doGraphQLFetch(
 				updateCard,
 				{id: card.id, title: inputs.title, content: inputs.content},

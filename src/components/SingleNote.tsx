@@ -1,4 +1,4 @@
-import {FormEvent, useEffect, useState} from "react";
+import {FormEvent, useEffect, useRef, useState} from "react";
 import {Note, NoteInput} from "../types/APITypes";
 import {createNote, updateNote} from "../utils/queries";
 import {doGraphQLFetch} from "../utils/fetch";
@@ -15,6 +15,7 @@ function SingleNote({note, reloadNotes}: NoteRowProps) {
 	};
 
 	const [inputs, setInputs] = useState(initValues);
+	const formRef = useRef<HTMLFormElement>(null);
 
 	const doEditUpload = async (inputs: NoteInput) => {
 		try {
@@ -56,6 +57,11 @@ function SingleNote({note, reloadNotes}: NoteRowProps) {
 
 	const handleSubmit = (event: FormEvent<HTMLButtonElement>) => {
 		event.preventDefault();
+
+		const valid = formRef.current?.checkValidity();
+		formRef.current?.reportValidity();
+		if (!valid) return;
+
 		if (note.id === "") {
 			doCreateUpload(inputs);
 		} else {
@@ -83,13 +89,14 @@ function SingleNote({note, reloadNotes}: NoteRowProps) {
 
 	return (
 		note && (
-			<form action="" className="single-note">
+			<form action="" className="single-note" ref={formRef}>
 				<input
 					type="text"
 					id="note-title"
 					name="title"
 					value={inputs.title}
 					onChange={handleInputChange}
+					maxLength={100}
 				></input>
 				<textarea
 					id="note-content"
@@ -97,6 +104,7 @@ function SingleNote({note, reloadNotes}: NoteRowProps) {
 					rows={100}
 					value={inputs.content}
 					onChange={handleInputChange}
+					maxLength={10000}
 				></textarea>
 				<button type="submit" onClick={handleSubmit} id="note-save">
 					Save

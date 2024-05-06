@@ -54,6 +54,56 @@ function Settings() {
 		return true;
 	};
 
+	const validateInputs = () => {
+		const validatedInputs: {
+			email?: string;
+			user_name?: string;
+			password?: string;
+			filename?: string;
+		} = {};
+
+		const validationResults = [];
+
+		if (inputs.email !== "") {
+			const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+			if (emailRegex.test(inputs.email)) {
+				validatedInputs.email = inputs.email;
+			} else {
+				validationResults.push("Invalid email");
+			}
+		}
+
+		if (inputs.user_name !== "") {
+			if (inputs.user_name.length >= 2 && inputs.user_name.length <= 100) {
+				validatedInputs.user_name = inputs.user_name;
+			} else {
+				validationResults.push(
+					"Username must be between 2 and 100 characters",
+				);
+			}
+		}
+
+		if (inputs.password !== "") {
+			if (inputs.password === inputs.password_repeat) {
+				if (inputs.password.length >= 6 && inputs.password.length <= 100) {
+					validatedInputs.password = inputs.password;
+				} else {
+					validationResults.push(
+						"Password must be between 6 and 100 characters",
+					);
+				}
+			} else {
+				validationResults.push("Passwords do not match");
+			}
+		}
+
+		if (validationResults.length > 0) {
+			alert(validationResults.join("\n"));
+		} else {
+			return validatedInputs;
+		}
+	};
+
 	const doUpload = async () => {
 		try {
 			const token = sessionStorage.getItem("token");
@@ -63,7 +113,10 @@ function Settings() {
 				return;
 			}
 
-			let imageFilename = "";
+			const user = validateInputs();
+			if (!user) {
+				return;
+			}
 
 			if (image) {
 				const imageResponse: UploadResponse = await doUploadFetch(
@@ -72,24 +125,23 @@ function Settings() {
 				);
 				console.log(imageResponse);
 				if (imageResponse.filename) {
-					imageFilename = imageResponse.filename;
+					user.filename = imageResponse.filename;
 				}
 			}
 
 			const response: ModifyUserResponse = await doGraphQLFetch(
 				putUser,
 				{
-					user: {
-						email: inputs.email,
-						user_name: inputs.user_name,
-						password: inputs.password,
-						filename: imageFilename,
-					},
+					user,
 				},
 				token,
 			);
 
-			alert("User updated successfully");
+			if (response.updateUser) {
+				alert("User updated successfully");
+			} else {
+				throw new Error("Error updating user");
+			}
 			setInputs(() => {
 				return {
 					user_name: response.updateUser.user.user_name,

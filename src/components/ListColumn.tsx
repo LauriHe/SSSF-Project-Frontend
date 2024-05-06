@@ -26,6 +26,14 @@ function ListColumn({list, token, deleteList}: ListProps) {
 	};
 
 	const uploadTitle = async () => {
+		if (title === "") {
+			alert("Title cannot be empty");
+			return;
+		}
+		if (title.length > 100) {
+			alert("Title cannot be longer than 100 characters");
+			return;
+		}
 		try {
 			const response = await doGraphQLFetch(
 				updateList,
