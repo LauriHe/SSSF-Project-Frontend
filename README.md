@@ -74,7 +74,7 @@ If you want to play around with the graphql sandbox go to https://lauhei-sssf-pr
 If you want to install and run the application locally on your own machine then follow these steps:
 
  1. Clone this repository
- 2. Clone the frontend repository from: [https://github.com/LauriHe/sssf-project-frontend](https://github.com/LauriHe/sssf-project-backend/)
+ 2. Clone the backend repository from: [https://github.com/LauriHe/sssf-project-frontend](https://github.com/LauriHe/sssf-project-backend/)
  3. Make a .env file inside the root of the backend and add the following content:
 
 >     NODE_ENV=development
