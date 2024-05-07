@@ -1,11 +1,14 @@
 import {Outlet, useNavigate} from "react-router-dom";
 import SvgIcons from "../components/SvgIcons";
-import {useEffect} from "react";
+import {useContext, useEffect} from "react";
 import {doGraphQLFetch} from "../utils/fetch";
 import {checkToken} from "../utils/queries";
+import {LayoutContext} from "../contexts/LayoutContext";
 
 function Layout() {
 	const navigate = useNavigate();
+
+	const {refreshProfilePic} = useContext(LayoutContext) || {};
 
 	const getProfilePic = async () => {
 		try {
@@ -36,7 +39,7 @@ function Layout() {
 		} else {
 			navigate("/");
 		}
-	}, []);
+	}, [refreshProfilePic]);
 
 	return (
 		<>

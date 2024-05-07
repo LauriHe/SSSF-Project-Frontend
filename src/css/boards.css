@@ -19,7 +19,7 @@
 }
 
 .list-options {
-	@apply w-[8em] absolute z-10 top-[3em] -right-[6em] p-[0.5em] rounded-[0.4em] bg-gray-700 border border-gray-600;
+	@apply w-[8em] absolute z-10 top-[3em] -right-[6em] p-[0.5em] rounded-[0.4em] bg-gray-700 border border-gray-600 flex flex-col gap-[0.5em];
 }
 
 .list-options-button {
@@ -44,6 +44,10 @@
 
 .add-card-button:hover {
 	@apply bg-blue-500 cursor-pointer;
+}
+
+#card-move-list {
+	@apply w-[8em] absolute z-10 top-0 -right-[8em] p-[0.5em] rounded-[0.4em] bg-gray-700 border border-gray-600 flex flex-col gap-[0.5em];
 }
 
 #boards-title {

@@ -35,7 +35,7 @@
 		@apply text-[1.5em] p-0;
 	}
 	img {
-		@apply w-[20em] h-[20em] rounded-[0.4em] shrink-0 grow-0 max-w-none;
+		@apply w-[20em] rounded-[0.4em] shrink-0 grow-0 max-w-none;
 	}
 }
 

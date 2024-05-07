@@ -197,6 +197,8 @@ function SingleBoard() {
 						list={list}
 						token={token}
 						deleteList={deleteSingleList}
+						refreshBoard={fetchLists}
+						board={board}
 					/>
 				))}
 				{board && (

@@ -1,4 +1,4 @@
-import {FormEvent, useEffect, useState} from "react";
+import {FormEvent, useContext, useEffect, useState} from "react";
 import {
 	ModifyUserResponse,
 	RegisterInput,
@@ -7,6 +7,7 @@ import {
 import {doGraphQLFetch, doUploadFetch} from "../utils/fetch";
 import {checkToken, deleteUser, putUser} from "../utils/queries";
 import {useNavigate} from "react-router-dom";
+import {LayoutContext} from "../contexts/LayoutContext";
 
 function Settings() {
 	const initValues: RegisterInput = {
@@ -19,8 +20,30 @@ function Settings() {
 	const [image, setImage] = useState<File | null>(null);
 	const [token, setToken] = useState<string>("");
 	const [profilePic, setProfilePic] = useState<string>("");
+	const {refreshProfilePic, setRefreshProfilePic} =
+		useContext(LayoutContext) || {};
 
 	const navigate = useNavigate();
+
+	const setInitValues = async () => {
+		try {
+			const token = sessionStorage.getItem("token");
+			const response = await doGraphQLFetch(checkToken, {token: token});
+
+			setInputs({
+				email: response.checkToken.user.email,
+				user_name: response.checkToken.user.user_name,
+				password: "",
+				password_repeat: "",
+			});
+
+			const fileUrl = import.meta.env.VITE_FILE_URL as string;
+			const pictureUrl = fileUrl + "/" + response.checkToken.user.filename;
+			setProfilePic(pictureUrl);
+		} catch (error) {
+			console.log("Cannot get user info");
+		}
+	};
 
 	const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		event.persist && event.persist();
@@ -123,7 +146,6 @@ function Settings() {
 					image,
 					token,
 				);
-				console.log(imageResponse);
 				if (imageResponse.filename) {
 					user.filename = imageResponse.filename;
 				}
@@ -150,6 +172,9 @@ function Settings() {
 					password_repeat: "",
 				};
 			});
+			setImage(null);
+			setInitValues();
+			if (setRefreshProfilePic) setRefreshProfilePic(!refreshProfilePic);
 		} catch (error) {
 			alert("Error updating user");
 			setInputs(() => {
@@ -166,26 +191,6 @@ function Settings() {
 		event.preventDefault();
 		if (!comparePasswords()) return;
 		doUpload();
-	};
-
-	const setInitValues = async () => {
-		try {
-			const token = sessionStorage.getItem("token");
-			const response = await doGraphQLFetch(checkToken, {token: token});
-
-			setInputs({
-				email: response.checkToken.user.email,
-				user_name: response.checkToken.user.user_name,
-				password: "",
-				password_repeat: "",
-			});
-
-			const fileUrl = import.meta.env.VITE_FILE_URL as string;
-			const pictureUrl = fileUrl + "/" + response.checkToken.user.filename;
-			setProfilePic(pictureUrl);
-		} catch (error) {
-			console.log("Cannot get user info");
-		}
 	};
 
 	const deleteAccount = async () => {

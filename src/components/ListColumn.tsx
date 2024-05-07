@@ -1,5 +1,5 @@
 import {useEffect, useRef, useState} from "react";
-import {Card, List} from "../types/APITypes";
+import {Board, Card, List} from "../types/APITypes";
 import ListRow from "./ListRow";
 import {doGraphQLFetch} from "../utils/fetch";
 import {
@@ -13,9 +13,11 @@ type ListProps = {
 	list: List;
 	token: string;
 	deleteList: (index: string) => Promise<void>;
+	refreshBoard: () => void;
+	board: Board | null;
 };
 
-function ListColumn({list, token, deleteList}: ListProps) {
+function ListColumn({list, token, deleteList, refreshBoard, board}: ListProps) {
 	const [title, setTitle] = useState<string>(list.title);
 	const [cards, setCards] = useState<Card[]>([]);
 	const [showListOptions, setShowListOptions] = useState<boolean>(false);
@@ -97,7 +99,7 @@ function ListColumn({list, token, deleteList}: ListProps) {
 
 	useEffect(() => {
 		fetchCards();
-	}, []);
+	}, [list]);
 
 	return (
 		<div className="list">
@@ -133,6 +135,8 @@ function ListColumn({list, token, deleteList}: ListProps) {
 					card={card}
 					token={token}
 					deleteCard={deleteSingleCard}
+					refreshBoard={refreshBoard}
+					board={board}
 				></ListRow>
 			))}
 			<button className="add-card-button" onClick={addCard}>

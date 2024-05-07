@@ -1,15 +1,17 @@
-import {Card} from "../types/APITypes";
-import {useRef, useState} from "react";
+import {Board, Card, List} from "../types/APITypes";
+import {useEffect, useRef, useState} from "react";
 import {doGraphQLFetch} from "../utils/fetch";
-import {updateCard} from "../utils/queries";
+import {getListsByBoard, moveCard, updateCard} from "../utils/queries";
 
 type ListRowProps = {
 	card: Card;
 	token: string;
 	deleteCard: (index: string) => Promise<void>;
+	refreshBoard: () => void;
+	board: Board | null;
 };
 
-function ListRow({card, token, deleteCard}: ListRowProps) {
+function ListRow({card, token, deleteCard, refreshBoard, board}: ListRowProps) {
 	const initValues = {
 		title: card.title,
 		content: card.content,
@@ -18,6 +20,8 @@ function ListRow({card, token, deleteCard}: ListRowProps) {
 	const [showCardOptions, setShowCardOptions] = useState(false);
 	const titleRef = useRef<HTMLInputElement>(null);
 	const contentRef = useRef<HTMLTextAreaElement>(null);
+	const [lists, setLists] = useState<List[]>([]);
+	const [moveCardOpen, setMoveCardOpen] = useState<boolean>(false);
 
 	const handleTitleKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
 		if (event.key === "Enter") {
@@ -80,6 +84,42 @@ function ListRow({card, token, deleteCard}: ListRowProps) {
 		});
 	};
 
+	const moveCardToList = async (listId: string) => {
+		try {
+			const response = await doGraphQLFetch(
+				moveCard,
+				{id: card.id, listId: listId},
+				token,
+			);
+			if (!response.moveCard) {
+				throw new Error("could not move card");
+			}
+			refreshBoard();
+		} catch (error) {
+			alert("could not move card");
+		}
+	};
+
+	const getLists = async () => {
+		try {
+			if (!board) {
+				throw new Error("could not fetch lists");
+			}
+			const response = await doGraphQLFetch(
+				getListsByBoard,
+				{boardId: board.id},
+				token,
+			);
+			setLists(response.listsByBoard);
+		} catch (error) {
+			console.error("could not fetch lists");
+		}
+	};
+
+	useEffect(() => {
+		getLists();
+	}, []);
+
 	return (
 		<div className="card">
 			<div className="flex gap-[0.2em] relative h-[2.3em]">
@@ -100,9 +140,45 @@ function ListRow({card, token, deleteCard}: ListRowProps) {
 					<span className="w-fit h-fit">...</span>
 				</button>
 				{showCardOptions && (
-					<div className="list-options top-[2.5em]">
+					<div
+						className="list-options top-[2.5em]"
+						onMouseLeave={() => {
+							setMoveCardOpen(false);
+							setShowCardOptions(false);
+						}}
+					>
+						<button
+							className="list-options-button hover:bg-gray-800"
+							onMouseEnter={() => {
+								setMoveCardOpen(true);
+							}}
+						>
+							Move to
+						</button>
+						{moveCardOpen && (
+							<div id="card-move-list">
+								{lists.length > 0 ? (
+									lists.map((list) => (
+										<button
+											key={list.id}
+											className="list-options-button hover:bg-gray-800"
+											onClick={() => {
+												moveCardToList(list.id);
+											}}
+										>
+											{list.title}
+										</button>
+									))
+								) : (
+									<div>No lists</div>
+								)}
+							</div>
+						)}
 						<button
 							className="list-options-button hover:bg-red-500"
+							onMouseEnter={() => {
+								setMoveCardOpen(false);
+							}}
 							onClick={() => {
 								deleteCard(card.id);
 							}}

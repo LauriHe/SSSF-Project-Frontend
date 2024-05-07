@@ -485,6 +485,21 @@ const updateCard = `mutation UpdateCard($id: ID!, $title: String, $content: Stri
   }
 }`;
 
+const moveCard = `mutation MoveCard($id: ID!, $listId: ID!) {
+  moveCard(id: $id, list_id: $listId) {
+    message
+    card {
+      id
+      list {
+        id
+        title
+      }
+      title
+      content
+    }
+  }
+}`;
+
 const deleteCard = `mutation DeleteCard($id: ID!) {
   deleteCard(id: $id)
 }`;
@@ -523,5 +538,6 @@ export {
 	getCardsByList,
 	createCard,
 	updateCard,
+	moveCard,
 	deleteCard,
 };
